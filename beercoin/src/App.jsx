@@ -1,7 +1,7 @@
 /**
  * BEERCOIN - Franquicia de Cerveza Inteligente
  * @author Juan Ignacio Wilt
- * @version 1.0.0
+ * @version 1.1.0
  * @year 2026
  * @description Frontend desarrollado en React + Tailwind + Framer Motion + Infraestructura.
  * @contact juaniwilt@gmail.com (o tu contacto profesional)
@@ -266,10 +266,21 @@ export default function App() {
 function BenefitSequence({ onComplete }) {
   const [index, setIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
   const nextBenefit = useCallback(() => {
-    if (index < BENEFIT_HEADINGS.length - 1) setIndex(prev => prev + 1);
-    else setIsFinished(true);
-  }, [index]);
+    // Evita que clics múltiples rompan el índice o la transición
+    if (isTransitioning || isFinished) return;
+
+    if (index < BENEFIT_HEADINGS.length - 1) {
+      setIsTransitioning(true);
+      setIndex(prev => prev + 1);
+      // Pequeño delay para estabilizar el render antes de permitir otro clic
+      setTimeout(() => setIsTransitioning(false), 400); 
+    } else {
+      setIsFinished(true);
+    }
+  }, [index, isFinished, isTransitioning]);
 
   useEffect(() => {
     if (!isFinished) {
@@ -278,29 +289,67 @@ function BenefitSequence({ onComplete }) {
     }
   }, [index, isFinished, nextBenefit]);
 
+  // VALIDACIÓN DE SEGURIDAD: Si por alguna razón el índice falla, mostramos el final
+  const currentBenefit = BENEFIT_HEADINGS[index];
+  if (!currentBenefit && !isFinished) {
+    setIsFinished(true);
+    return null;
+  }
+
   return (
-    <div className="relative w-full max-w-4xl">
+    <div className="relative w-full max-w-4xl text-center">
       <AnimatePresence mode="wait">
         {!isFinished ? (
-          <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }} className="flex flex-col items-center">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center relative"
+          >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#FFD1AB]/10 blur-[100px] rounded-full -z-10" />
+            
             <Sparkles className="w-16 h-16 text-[#FFD1AB] mb-8" />
-            <h2 className="text-5xl md:text-7xl font-black mb-8 text-[#FFD1AB] uppercase tracking-tighter drop-shadow-md">{BENEFIT_HEADINGS[index].title}</h2>
-            <p className="text-xl md:text-2xl text-zinc-400 font-light max-w-2xl leading-relaxed mb-12">{BENEFIT_HEADINGS[index].description}</p>
-            <button onClick={nextBenefit} className="flex items-center gap-2 text-zinc-500 hover:text-[#FFD1AB] transition-colors uppercase font-black tracking-widest text-sm group">
+            
+            {/* Usamos safe-access con ?. por las dudas */}
+            <h2 className="text-5xl md:text-7xl font-black mb-8 text-[#FFD1AB] uppercase tracking-tighter drop-shadow-md">
+              {currentBenefit?.title}
+            </h2>
+            <p className="text-xl md:text-2xl text-zinc-400 font-light max-w-2xl leading-relaxed mb-12">
+              {currentBenefit?.description}
+            </p>
+
+            <button 
+              onClick={nextBenefit}
+              disabled={isTransitioning}
+              className={`flex items-center gap-2 text-zinc-500 hover:text-[#FFD1AB] transition-colors uppercase font-black tracking-widest text-sm group ${isTransitioning ? 'opacity-50 cursor-wait' : ''}`}
+            >
               Siguiente <ChevronRight className="group-hover:translate-x-1 transition-transform" />
             </button>
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center">
              <h2 className="text-6xl font-black mb-12 uppercase italic">¡LISTO PARA EL ÉXITO!</h2>
-             <button onClick={onComplete} className="bg-[#FF007F] text-white text-2xl font-black py-6 px-16 rounded-full shadow-[0_0_50px_rgba(255,0,127,0.4)] hover:scale-105 transition-all uppercase tracking-tighter">Configurar Mi Modelo</button>
+             <button 
+                onClick={onComplete}
+                className="bg-[#FF007F] text-white text-2xl font-black py-6 px-16 rounded-full shadow-[0_0_50px_rgba(255,0,127,0.4)] hover:scale-105 transition-all"
+              >
+                CONFIGURAR MI MODELO
+              </button>
           </motion.div>
         )}
       </AnimatePresence>
+
       {!isFinished && (
         <div className="mt-16 w-48 h-1 bg-zinc-800 mx-auto rounded-full overflow-hidden">
-          <motion.div key={index} initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 8, ease: "linear" }} className="h-full bg-[#FFD1AB]" />
+          <motion.div 
+            key={index}
+            initial={{ width: 0 }}
+            animate={{ width: "100%" }}
+            transition={{ duration: 8, ease: "linear" }}
+            className="h-full bg-[#FFD1AB]"
+          />
         </div>
       )}
     </div>
