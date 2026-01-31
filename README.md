@@ -14,7 +14,7 @@ el bar funciona con un sistema de monedas físicas o tokens que activan el expen
 
 - Estado del proyecto:
 
-En desarrollo / versión inicial
+Terminado, deploy completo.
 
 - Licencia
 
