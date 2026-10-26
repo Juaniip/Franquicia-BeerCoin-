@@ -1,0 +1,7 @@
+.git
+.gitignore
+.assetsignore
+README.md
+wrangler.toml
+js/vendor/anime.LICENSE.md
+modelo party.png

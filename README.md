@@ -2,42 +2,40 @@
 
 Sitio web de BeerCoin, la franquicia de bares que reemplaza al barman por un sistema de fichas/tokens: metés la moneda, apretás el botón y servís tu propia cerveza. Sin filas, sin esperas, con el foco puesto en la previa y no en hacer cola.
 
-## Qué hay en este repo
+## Estructura
 
-Hay dos versiones del sitio:
-
-- **`index.html`** — la página lista para publicar. Es un solo archivo HTML, sin dependencias externas ni proceso de build. Se abre con doble click en cualquier navegador y funciona. Ideal para subirla a un hosting estático, mandarla por WhatsApp o dejarla en un pendrive.
-- **`beercoin/`** — el proyecto original en React + Vite + Tailwind, por si en algún momento hay que seguir desarrollando el sitio con componentes, animaciones con Framer Motion, etc.
-
-Si solo necesitás mostrar el sitio o subirlo a algún lado rápido, usá `index.html`. Si vas a seguir programando features nuevas, trabajá dentro de `beercoin/`.
-
-## `index.html` — cómo está armado
-
-Es una página estática de una sola sección scrolleable (landing + configurador), sin frameworks. Todo el JS es vanilla y todas las imágenes están embebidas en el propio archivo en formato WebP (convertidas y comprimidas para que el HTML no pese varios MB). No hace falta levantar un servidor ni instalar nada — se abre y ya.
-
-Incluye:
-
-- Hero con el logo y la marca.
-- Bloques de texto explicando la propuesta (autoservicio, "al paso", recupero rápido de inversión, staff mínimo).
-- Un configurador donde el usuario elige el modelo de franquicia (Food Truck, Empotrado, Parador, Bar Clásico, Party) y las características que quiere sumar.
-- Una secuencia de beneficios tipo "story" que se muestra antes del resumen final.
-- Un resumen final con botón que arma un mensaje de WhatsApp con la configuración elegida y lo manda directo al número de contacto.
-
-Si hay que cambiar el número de WhatsApp, el texto del mensaje o agregar/sacar alguna característica del listado, todo eso está al principio del `<script>`, en las variables `WHATSAPP_NUMBER`, `MODELS` y `FEATURES`. No hace falta tocar nada más.
-
-## `beercoin/` — el proyecto en React
+Sitio estático sin build: se abre `index.html` (o se sirve la carpeta) y funciona, también offline.
 
 ```
-cd beercoin
-npm install
-npm run dev
+index.html            markup de la página
+css/styles.css        estilos (mobile first, breakpoints 640 / 900 / 1024)
+js/vendor/            anime.js v4 (copia local del bundle UMD, licencia MIT)
+js/data.js            DATOS EDITABLES: WhatsApp, modelos, características, beneficios
+js/icons.js           íconos SVG
+js/motion.js          todas las animaciones (anime.js)
+js/app.js             estado, render y eventos
+assets/img/           renders y logo en WebP
+wrangler.toml         deploy en Cloudflare (assets estáticos)
+.assetsignore         archivos que no se publican
 ```
 
-Con eso levanta en local con hot reload. `npm run build` genera la versión de producción en `dist/`.
+- **Cambiar número, modelos o extras:** solo `js/data.js` (`WHATSAPP_NUMBER`, `MODELS`, `FEATURES`, `FIXED_FEATURES`, `BENEFITS`).
+- **Cambiar una animación:** solo `js/motion.js`. `app.js` llama a `BeerCoin.motion.*` y no sabe cómo se anima nada.
+- **Agregar un render:** WebP de ~1100px de ancho en `assets/img/` y referenciarlo en `IMAGES` de `data.js`.
+
+## Animaciones (anime.js)
+
+- Hero: letras de "TU PROPIO" que suben, moneda que entra girando y después flota, gradiente del "BEERCOIN" en loop, halo que respira.
+- Bloques de beneficios y configurador: se revelan al scrollear (`onScroll`) con clip-path, palabras del título y stagger de tarjetas.
+- Configurador: pulso al elegir modelo, check con rebote, sacudida al tocar una característica incluida, flecha del botón GENERAR en loop.
+- Secuencia de beneficios: barra de progreso animada que avanza sola cada 8 s; se puede saltear con la X o cerrar con Esc.
+- Preview: entrada escalonada del render y la lista; el botón de WhatsApp late suave.
+
+Si el sistema tiene activado "reducir movimiento", las animaciones van directo a su estado final y no hay loops. Si anime.js no carga, el sitio funciona igual sin animar.
 
 ## Estado
 
-En desarrollo. El configurador y el flujo de cotización por WhatsApp ya andan; falta terminar de sumar renders para todos los modelos (por ahora "Modelo Party" no tiene imagen todavía).
+El configurador, el flujo de cotización por WhatsApp y los renders de los 5 modelos están completos.
 
 ## Licencia
 
